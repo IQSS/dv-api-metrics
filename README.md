@@ -1,5 +1,5 @@
 # cafe-metrics
-Python code to collect metrics from datasets in CAFE collections
+Python code to collect metrics from datasets in [Dataverse](https://dataverse.org/) collections. Used primarily to support the CAFE project.
 
 ## Objectives
 - Track collection change over time. Collection change could include tracking unique depositors and datasets created. 
