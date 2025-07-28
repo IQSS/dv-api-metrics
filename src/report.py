@@ -4,7 +4,6 @@ from polars import DataFrame
 import requests
 import copy
 import apiquery as api
-import pprint as pp
 
 class MetricsReportBaseClass(ABC):
     """
