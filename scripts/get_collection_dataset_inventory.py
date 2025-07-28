@@ -16,7 +16,7 @@ def main():
 
     Usage
     -----
-    % python get_collection_dataset_inventory.py <installation> <collection> \
+    % python get_collection_dataset_inventory.py <collection> --installation <server>\
        --filename <filename>  --verbose
     """
     parser = argparse.ArgumentParser(
@@ -56,18 +56,19 @@ def main():
         # set default filename
         tod = datetime.now()
         timestamp = tod.strftime('%Y_%m_%d_%H_%M')
-        filename = f'cafe_metrics_{timestamp}.tsv'
-        logging.info(f'Using default output file: {filename}')
+        filename = f'collection_inventory_{timestamp}.tsv'
+        logging.info(f'Using default output file: {filename}')       
        
     api_token = os.getenv('DATAVERSE_API_TOKEN')
     if not api_token:
         raise Exception('Environment variable: "DATAVERSE_API_TOKEN" is not set')
 
-    server = 'https://dataverse.harvard.edu'
+    report = rp.DataverseCollectionDatasetInventoryReport(server_url, collection)
+    df = report.generate(api_token)
 
-    # TO DO
+    df.write_csv(filename, separator='\t')
 
-    logging.info(f'Wrote all metrics to: cafe_metrics_records_<output_type>_{filename}.tsv')
+    logging.info(f'Wrote dataset inventory to: {filename}')
 
 if __name__ == "__main__":
     main()
