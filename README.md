@@ -1,6 +1,7 @@
-# cafe-metrics
-Python code to collect metrics from datasets in [Dataverse](https://dataverse.org/) collections. Used primarily to support the CAFE project.
-This library will become obsolete when the Dataverse Hub supports more metrics including dataset download metrics. 
+# dv-api-metrics
+- Python code to collect metrics from datasets in [Dataverse](https://dataverse.org/) collections.
+- Used primarily to support the CAFE project.
+- Note: This library will become obsolete when the Dataverse Hub supports more metrics including dataset download metrics. 
 
 ## Objectives
 - Track collection change over time. Collection change could include tracking unique depositors and datasets created. 
