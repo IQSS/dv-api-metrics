@@ -4,8 +4,8 @@
 - Note: This library will become obsolete when the Dataverse Hub supports more metrics including dataset download metrics. 
 
 ## Objectives
-- Track collection change over time. Collection change could include tracking unique depositors and datasets created. 
-- Track dataset engagement over time. Dataset engagement could include tracking dataset and file download counts, as well as dataset citations (where possible). 
+- **Track collection change over time**. Collection change could include tracking unique depositors and datasets created. 
+- **Track dataset engagement over time**. Dataset engagement could include tracking dataset and file download counts, as well as dataset citations (where possible). 
 
 ## Desired Metrics
 - Number of datasets created per month
@@ -25,3 +25,4 @@ Open questions:
     - Reports (e.g., summaries of API query output)
 ## Technical Limitations
 - Metrics will be collected using existing Dataverse Metrics API endpoints or Native API endpoints.
+- Make Data Count metrics range from 2020-09 to the present.
