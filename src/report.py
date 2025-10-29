@@ -822,7 +822,9 @@ class DataverseCollectionDatasetInventoryReport(DataverseMetricsReportBaseClass)
             return DataFrame()
         
         # create dataframe from downloads
-        df = pl.from_dicts(list(all_collection_datasets.values()))
+        df = pl.from_dicts(list(all_collection_datasets.values()), 
+                           schema_overrides={'version_number':pl.String,
+                                             'minor_version_number':pl.String})
         df = df.fill_null(0)
         self._raw_data = df.clone() # cache raw data
 
