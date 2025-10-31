@@ -712,11 +712,168 @@ class DataverseCollectionMonthlyDownloadsReport(DataverseMetricsReportBaseClass)
         """export the result"""
         pass
 
+
+class DataverseCollectionMonthlyDatasetsReport(DataverseMetricsReportBaseClass):
+    """
+    Report for cumulative and monthly collection downloads
+
+    Enpoints:
+    - api/info/metrics/datasets/monthly
+    - TBD
+
+    Parameters
+    ----------
+    server : str
+        Url for server to query (e.g., https://demo.dataverse.org)
+    collection : str
+        Name of collection metrics to retrieve
+    """
+
+    def __init__(self, server: str, collection: str):
+        self._name = 'Dataverse Cumulative and Monthly Collection Datasets Report'
+        self._description = 'TBD'
+        self._server_url = server
+
+        # parameters
+        self.collection = collection
+
+        # datasets
+        self._raw_data = DataFrame()
+        self._cumulative_df = DataFrame()
+        self._monthly_df = DataFrame()
+
+    @property
+    def name(self) -> str:
+        """report name"""
+        return self._name
+
+    @name.setter
+    def name(self, name: str):
+        """set report name"""
+        pass
+
+    @name.getter
+    def name(self):
+        """get report name"""
+        return self._name
+
+    @property
+    def description(self) -> str:
+        """report description"""
+        return self._description
+
+    @description.setter
+    def description(self, description: str):
+        """set report description"""
+        pass
+
+    @description.getter
+    def description(self):
+        """get report description"""
+        return self._description
+
+    @property
+    def data(self) -> DataFrame:
+        """report data"""
+        return self._raw_data
+
+    @data.setter
+    def data(self, **kwargs):
+        """set report data"""
+        pass
+
+    @data.getter
+    def data(self) -> DataFrame:
+        """get report data"""
+        return self._raw_data
+
+    @property
+    def cumulative_metrics(self):
+        """get cumulative metrics"""
+        return self._cumulative_df
+
+    @property
+    def monthly_metrics(self):
+        """get monthly metrics"""
+        return self._monthly_df
+
+    def _get_collection_datasets(self, collection: str, api_token: str) -> list:
+        """
+        Get monthly collection datasets
+        """
+        datasets = []
+        query = api.DataverseDatasetsMonthly(self._server_url, parentAlias=collection)
+        result = query.execute(api_token)
+        if not result['status_code'] == requests.codes.ok:
+            return []
+        for entry in result['data']:
+            datasets.append({'count': entry['count'],
+                              'date': entry['date'],
+                              'collection': collection})
+        return datasets
+
+    def generate(self, api_token: str) -> DataFrame:
+        """generate the report"""
+
+        # dict of current collection & subcollections metadata
+        all_collections = {}
+
+        # get top-level collection metadata
+        # this collection may contain datasets as well as subcollections
+        all_collections[self.collection] = self._get_collection_metadata(self.collection, api_token)
+
+        # get top-level collection's subcollections
+        subcollections = self._get_subcollections(self.collection, api_token)
+
+        # add subcollections to all collections
+        all_collections = all_collections | subcollections
+
+        datasets = []
+        for collection in all_collections.keys():
+            counts = self._get_collection_datasets(collection, api_token)
+            datasets = datasets + counts
+
+        if not datasets:
+            return self._raw_data
+
+        all_collection_datasets = []
+        for dataset in datasets:
+            alias = dataset['collection']
+            coll_info = all_collections[alias]
+            coll_info = coll_info | dataset
+            all_collection_datasets.append(coll_info)
+
+        # create dataframe from downloads
+        df = pl.from_dicts(all_collection_datasets)
+        df = df.fill_null(0)
+        self._raw_data = df.clone()  # cache raw data
+
+        # calculate cumulative and monthly reports
+        index = ['alias',
+                 'name',
+                 'description']
+        pivot_table = df.pivot('date', index=index, values='count')
+        pivot_table = pivot_table.fill_null(0)
+        self._cumulative_df = pivot_table
+
+        # calculate monthlies
+        monthly_df = self._get_monthly_counts(pivot_table, index)
+        monthly_df = monthly_df.fill_null(0)  # set months with None values to 0
+        self._monthly_df = monthly_df
+
+        # return the raw data
+        return self._raw_data
+
+    def export(self, file_format: str):
+        """export the result"""
+        pass
+
+
 class DataverseCollectionDatasetInventoryReport(DataverseMetricsReportBaseClass):
     """
     Report producing an inventory of all datasets for a collection
     and its subcollections
-    
+
     Endpoints
     ---------
     -
@@ -753,7 +910,7 @@ class DataverseCollectionDatasetInventoryReport(DataverseMetricsReportBaseClass)
     def name(self):
         """get report name"""
         return self._name
-    
+
     @property
     def description(self) -> str:
         """report description"""
@@ -789,7 +946,7 @@ class DataverseCollectionDatasetInventoryReport(DataverseMetricsReportBaseClass)
 
         # dict of current collection & subcollections metadata
         all_collections = {}
-        
+
         # get top-level collection metadata
         # this collection may contain datasets as well as subcollections
         metadata = self._get_collection_metadata(self.collection, api_token)
@@ -820,7 +977,7 @@ class DataverseCollectionDatasetInventoryReport(DataverseMetricsReportBaseClass)
         # if no datasets were collected
         if not all_collection_datasets:
             return DataFrame()
-        
+
         # create dataframe from downloads
         df = pl.from_dicts(list(all_collection_datasets.values()))
         df = df.fill_null(0)
@@ -828,7 +985,7 @@ class DataverseCollectionDatasetInventoryReport(DataverseMetricsReportBaseClass)
 
         # return the raw data
         return self._raw_data
-    
+
     def export(self, file_format : str):
         """export the result"""
         pass

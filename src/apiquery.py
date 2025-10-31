@@ -269,6 +269,81 @@ class DataverseUniqueDownloadsMonthly(DataverseMetricsAPIQuery):
             'data': r.json()['data']
         }
 
+
+class DataverseDatasetsMonthly(DataverseMetricsAPIQuery):
+    """
+    Monthly cumulative timeseries of unique user counts for
+    datasets in the collection scope.
+
+    Endpoint: /api/info/metrics/datasets/monthly
+
+    See: https://guides.dataverse.org/en/latest/api/metrics.html
+    """
+
+    def __init__(self, server: str, **kwargs):
+        super().__init__(server)
+        self._parameters = {
+            'parentAlias': kwargs.get('parentAlias', None),
+        }
+
+    @property
+    def endpoint(self) -> str:
+        return 'api/info/metrics/datasets/monthly'
+
+    @property
+    def parameters(self):
+        return self._parameters
+
+    @parameters.getter
+    def parameters(self):
+        """
+        Get API parameters
+
+        Return
+        ------
+        dict
+        """
+        return self._parameters
+
+    @parameters.setter
+    def parameters(self, params: dict):
+        for key in params.keys():
+            if not key in self._parameters.keys():
+                raise Exception(f'Invalid parameter: {key}')
+            self._parameters[key] = params[key]
+
+    def execute(self, api_token: str) -> dict:
+        """
+        Execute query
+
+        Return
+        ------
+        dict
+            {'status_code': code, 'data':[data], 'reason':reason}
+        """
+        headers = {}
+        headers['Accept'] = 'application/json'
+        headers['X-Dataverse-key'] = api_token
+
+        request_url = f'{self.server_url}/{self.endpoint}'
+        payload = self._parameters
+
+        r = requests.get(request_url, headers=headers, params=payload)
+
+        if not r.status_code == requests.codes.ok:
+            return {
+                'status_code': r.status_code,
+                'reason': r.reason,
+                'data': []
+            }
+
+        return {
+            'status_code': r.status_code,
+            'reason': r.reason,
+            'data': r.json()['data']
+        }
+
+
 class DataverseDatasetDetails(DataverseMetricsAPIQuery):
     """
     Get detailed information about a dataset given its 
