@@ -14,6 +14,14 @@
 - Dataset keyword frequency per month
 - Number of (unique) depositors per month
 - Number of file downloads per month per dataset
+- Make Data Count (MDC) metrics
+    - Number of Make Data Count unique downloads per month
+    - Number of Make Data Count unique views per dataset
+    - Number of Make Data Count citations per dataset
+- Total number of harvested datasets
+- Number of datasets per subject
+- Number of datasets per Geographic Coverage Country / Nation
+- Number of datasets per keyword term (available via the UI facets, so should be in search API)
 
 ## Additional Metrics
 - Number of harvested dataset engagements (Note: not available via APIs)
