@@ -866,3 +866,76 @@ class DataverseMDCUniqueViews(DataverseMetricsAPIQuery):
             'reason': r.reason,
             'data': r.json()['data']
         }
+
+class DataverseDatasetsHarvestedMonthly(DataverseMetricsAPIQuery):
+    """
+    Retrieve Make Data Count unique dataset views
+
+    See: https://guides.dataverse.org/en/latest/api/native-api.html#retrieving-unique-views-for-a-dataset
+
+    Endpoint: api/info/metrics/makeDataCount/viewsUnique/?parentAlias=:parentAlias&datalocation=remote
+    """
+
+    def __init__(self, server, **kwargs):
+        super().__init__(server)
+        self._parameters = {
+            'parentAlias': kwargs.get('parentAlias', None)
+      }
+
+    @property
+    def endpoint(self) -> str:
+        return f'api/info/metrics/datasets/?parentAlias=:parentAlias&dataLocation=remote'
+
+    @property
+    def parameters(self):
+        return self._parameters
+
+    @parameters.setter
+    def parameters(self, params: dict):
+        """
+        Set API parameters
+
+        Parameter
+        ---------
+        params : dict
+        """
+        for key in params.keys():
+            if not key in self._parameters.keys():
+                raise Exception(f'Invalid parameter: {key}')
+            self._parameters[key] = params[key]
+
+    def execute(self, api_token: str) -> dict:
+        """
+        Query api
+
+        Return
+        ------
+        dict:
+            {'status_code': code, 'data':{data}}
+            data fields:
+                count, date
+        """
+        if not self.validate_parameters():
+            raise Exception(f'Invalid parameter value in: {self._parameters}')
+
+        headers = {}
+        headers['Accept'] = 'application/json'
+        headers['X-Dataverse-key'] = api_token
+
+        payload = self._parameters
+        request_url = f'{self.server_url}/{self.endpoint}'
+
+        r = requests.get(request_url, headers=headers, params=payload)
+
+        if not r.status_code == requests.codes.ok:
+            return {
+                'status_code': r.status_code,
+                'reason': r.reason,
+                'data': {}
+            }
+
+        return {
+            'status_code': r.status_code,
+            'reason': r.reason,
+            'data': r.json()['data']
+        }

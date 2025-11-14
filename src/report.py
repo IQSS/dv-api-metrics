@@ -39,7 +39,7 @@ class MetricsReportBaseClass(ABC):
     def name(self):
         """get report name"""
         return ''
-    
+
     @property
     @abstractmethod
     def description(self) -> str:
@@ -70,7 +70,7 @@ class MetricsReportBaseClass(ABC):
     def data(self) -> DataFrame:
         """get report data"""
         return DataFrame()
-      
+
     """
     Class methods
     """
@@ -78,7 +78,7 @@ class MetricsReportBaseClass(ABC):
     def generate(self, api_token : str) -> DataFrame:
         """generate the report"""
         return self.data
-    
+
     @abstractmethod
     def export(self, file_format : str):
         """export the result"""
@@ -125,7 +125,7 @@ class DataverseMetricsReportBaseClass(MetricsReportBaseClass):
     def name(self):
         """get report name"""
         return self._name
-    
+
     @property
     def description(self) -> str:
         """report description"""
@@ -155,7 +155,7 @@ class DataverseMetricsReportBaseClass(MetricsReportBaseClass):
     def data(self) -> DataFrame:
         """get report data"""
         return DataFrame()
-    
+
     """
     Private class methods
     """
@@ -172,13 +172,13 @@ class DataverseMetricsReportBaseClass(MetricsReportBaseClass):
         """
         if not collection or not api_token:
             return {}
-        
+
         query = api.DataverseViewCollection(self._server_url, id=collection)
         result = query.execute(api_token)
 
         if not result.get('status_code') == requests.codes.ok:
             return {}
-    
+
         record = result['data']
         return {
             'alias':collection,
@@ -196,7 +196,7 @@ class DataverseMetricsReportBaseClass(MetricsReportBaseClass):
         """
         if not collection or not api_token:
             return {}
-        
+
         subcollections = {}
         collection_tree_query = api.DataverseCollectionTreeHierarchy(self._server_url)
         collection_tree_query.parameters = {'parentAlias':collection}
@@ -204,13 +204,13 @@ class DataverseMetricsReportBaseClass(MetricsReportBaseClass):
 
         if not results.get('status_code') == requests.codes.ok:
             return {}
-        
+
         # there are no subcollections
         if not results['data'].get('children'):
             return {}
-        
+
         kids = results['data']['children']
-        
+
         # get subcollections
         for kid in kids:
             alias = kid['alias']
@@ -228,14 +228,14 @@ class DataverseMetricsReportBaseClass(MetricsReportBaseClass):
         """
         if not collection or not api_token:
             return {}
-        
+
         query = api.DataverseShowCollectionContents(self._server_url)
         query.parameters = {'id':collection}
         results = query.execute(api_token)
 
         if not results.get('status_code') == requests.codes.ok:
             return {}
-        
+
         datasets = {}
         for result in results['data']:
             if result['type'] and result['type'] == 'dataset':
@@ -251,7 +251,7 @@ class DataverseMetricsReportBaseClass(MetricsReportBaseClass):
         """
         if not pid or not collection or not api_token:
             return {}
-        
+
         query = api.DataverseDatasetDetails(self._server_url)
         query.parameters = {
             'persistentId':pid
@@ -278,7 +278,7 @@ class DataverseMetricsReportBaseClass(MetricsReportBaseClass):
         details['num_files'] = len(data['files'])
 
         return details
-   
+
     def _is_local(self, pid : str) -> bool:
         """
         Is dataset local (or harvested)
@@ -297,7 +297,7 @@ class DataverseMetricsReportBaseClass(MetricsReportBaseClass):
         if not hdv_authority in pid:
             return False
         return True
-    
+
     def _get_monthly_counts(self, cumulative_df : DataFrame, index : list) -> DataFrame:
         """
         Given a cumulative count dataset, calculate individual monthly counts
@@ -337,19 +337,19 @@ class DataverseMetricsReportBaseClass(MetricsReportBaseClass):
         monthly_df = pl.concat([index_columns_df, df], how='horizontal')
 
         return monthly_df
-        
+
     """
     Public class methods
     """
-      
+
     def generate(self, api_token : str) -> DataFrame:
         """generate the report"""
         return DataFrame()
-    
+
     def export(self, file_format : str):
         """export the result"""
         pass
-    
+
 class DataverseCollectionDatasetUniqueDownloadsReport(DataverseMetricsReportBaseClass):
     """
     Report for cumulative and monthly collection downloads.
@@ -394,7 +394,7 @@ class DataverseCollectionDatasetUniqueDownloadsReport(DataverseMetricsReportBase
     def name(self):
         """get report name"""
         return self._name
-    
+
     @property
     def description(self) -> str:
         """report description"""
@@ -424,23 +424,23 @@ class DataverseCollectionDatasetUniqueDownloadsReport(DataverseMetricsReportBase
     def data(self) -> DataFrame:
         """get report data"""
         return self._raw_data
-    
+
     @property
     def cumulative_metrics(self):
         """get cumulative metrics"""
         return self._cumulative_df
-    
+
     @property
     def monthly_metrics(self):
         """get monthly metrics"""
         return self._monthly_df
-    
+
     def _get_downloads(self, api_token : str) -> dict:
         query = api.DataverseUniqueDownloadsMonthly(self._server_url)
         query.parameters = {'parentAlias':self.collection}
         metrics = query.execute(api_token)
         return metrics
-    
+
     def _remove_harvested_datasets(self, datasets : dict) -> dict:
         """
         Remove any harvested datasets from an input dictionary
@@ -453,14 +453,14 @@ class DataverseCollectionDatasetUniqueDownloadsReport(DataverseMetricsReportBase
             if not self._is_local(dataset):
                 del local_datasets[dataset]
         return local_datasets
-    
+
     def _process_results(self, collections : dict, datasets : dict, downloads : list) -> list:
         """
         Combine each dataset's collection, details, and download information
         """
         if not collections or not datasets or not downloads:
             return []
-        
+
         results = []
         for dataset in downloads:
             pid = dataset['pid']
@@ -492,7 +492,7 @@ class DataverseCollectionDatasetUniqueDownloadsReport(DataverseMetricsReportBase
         """generate the report"""
         # dict of current collection & subcollections metadata
         all_collections = {}
-        
+
         # get top-level collection metadata
         # this collection may contain datasets as well as subcollections
         all_collections[self.collection] = self._get_collection_metadata(self.collection, api_token)
@@ -553,7 +553,7 @@ class DataverseCollectionDatasetUniqueDownloadsReport(DataverseMetricsReportBase
 
         # return the raw data
         return self._raw_data
-    
+
     def export(self, file_format : str):
         """export the result"""
         pass
@@ -600,7 +600,7 @@ class DataverseCollectionMonthlyDownloadsReport(DataverseMetricsReportBaseClass)
     def name(self):
         """get report name"""
         return self._name
-    
+
     @property
     def description(self) -> str:
         """report description"""
@@ -630,17 +630,17 @@ class DataverseCollectionMonthlyDownloadsReport(DataverseMetricsReportBaseClass)
     def data(self) -> DataFrame:
         """get report data"""
         return self._raw_data
-    
+
     @property
     def cumulative_metrics(self):
         """get cumulative metrics"""
         return self._cumulative_df
-    
+
     @property
     def monthly_metrics(self):
         """get monthly metrics"""
         return self._monthly_df
-    
+
     def _get_collection_downloads(self, collection : str, api_token : str) -> list:
         """
         Get monthly collection downloads
@@ -661,7 +661,7 @@ class DataverseCollectionMonthlyDownloadsReport(DataverseMetricsReportBaseClass)
 
         # dict of current collection & subcollections metadata
         all_collections = {}
-        
+
         # get top-level collection metadata
         # this collection may contain datasets as well as subcollections
         all_collections[self.collection] = self._get_collection_metadata(self.collection, api_token)
@@ -679,7 +679,7 @@ class DataverseCollectionMonthlyDownloadsReport(DataverseMetricsReportBaseClass)
 
         if not downloads:
             return self._raw_data 
-        
+
         all_collection_downloads = []
         for download in downloads:
             alias = download['collection']
@@ -707,7 +707,7 @@ class DataverseCollectionMonthlyDownloadsReport(DataverseMetricsReportBaseClass)
 
         # return the raw data
         return self._raw_data
-    
+
     def export(self, file_format : str):
         """export the result"""
         pass
@@ -991,3 +991,154 @@ class DataverseCollectionDatasetInventoryReport(DataverseMetricsReportBaseClass)
     def export(self, file_format : str):
         """export the result"""
         pass
+
+class DataverseCollectionHarvestDatasetViewsUniqueReport(DataverseMetricsReportBaseClass):
+    """
+    Report for cumulative and monthly collection downloads.
+
+    Uses the following endpoints:
+    - api/info/metrics/uniquedownloads
+    - api/dataverses/{$collection}/contents
+    - api/datasets/:persistentId/?persistentId={$id}
+    -
+
+    Parameters
+    ----------
+    server : str
+        Url for server to query (e.g., https://demo.dataverse.org)
+    collection : str
+        Name of collection metrics to retrieve
+    """
+
+    def __init__(self, server: str, collection: str):
+        self._name = 'Dataverse Cumulative and Monthy Collection Unique Downloads Report'
+        self._description = 'TBD'
+        self._server_url = server
+
+        # parameters
+        self.collection = collection
+
+        # datasets
+        self._raw_data = DataFrame()
+
+    @property
+    def name(self) -> str:
+        """report name"""
+        return self._name
+
+    @name.setter
+    def name(self, name: str):
+        """set report name"""
+        pass
+
+    @name.getter
+    def name(self):
+        """get report name"""
+        return self._name
+
+    @property
+    def description(self) -> str:
+        """report description"""
+        return self._description
+
+    @description.setter
+    def description(self, description: str):
+        """set report description"""
+        pass
+
+    @description.getter
+    def description(self):
+        """get report description"""
+        return self._description
+
+    @property
+    def data(self) -> DataFrame:
+        """report data"""
+        return self._raw_data
+
+    @data.setter
+    def data(self, **kwargs):
+        """set report data"""
+        pass
+
+    @data.getter
+    def data(self) -> DataFrame:
+        """get report data"""
+        return self._raw_data
+
+    def _remove_local_datasets(self, datasets: dict) -> dict:
+        """
+        Remove any harvested datasets from an input dictionary
+        """
+        if not datasets:
+            return {}
+
+        harvested_datasets = copy.deepcopy(datasets)
+        for dataset in datasets:
+            if self._is_local(dataset):
+                del harvested_datasets[dataset]
+        return harvested_datasets
+
+    def _process_results(self,  views: dict) -> list:
+        """
+        Combine each dataset's collection, details, and download information
+        """
+        if not views:
+            return []
+
+        results = []
+        for pid, dataset_details in views.items():
+            views_unique = dataset_details.get('viewsUnique', 0)
+            result = {'persistentId': pid,
+                                'unique_views': views_unique}
+            results.append(result)
+        return results
+
+    def generate(self, api_token: str) -> DataFrame:
+        """generate the report"""
+        # dict of current collection & subcollections metadata
+        all_collections = {}
+
+        # get top-level collection metadata
+        # this collection may contain datasets as well as subcollections
+        all_collections[self.collection] = self._get_collection_metadata(self.collection, api_token)
+
+        # get top-level collection's subcollections
+        subcollections = self._get_subcollections(self.collection, api_token)
+
+        # add subcollections to all collections
+        all_collections = all_collections | subcollections
+
+        # get datasets for all collections
+        all_collection_datasets = {}
+        for collection in all_collections.keys():
+            alias = all_collections[collection]['alias']
+            datasets = self._get_collection_datasets(alias, api_token)
+            all_collection_datasets = all_collection_datasets | datasets
+
+        # remove local datasets, leaving only harvested datasets
+        all_collection_datasets = self._remove_local_datasets(all_collection_datasets)
+
+        all_views = {}
+        views = []
+        for dataset in all_collection_datasets:
+            unique_views = api.DataverseMDCUniqueViews(self._server_url, persistentId=dataset)
+            result = unique_views.execute(api_token)
+            all_views[dataset] = result['data']
+            views.append(result['data'])
+
+        # process results to create one table
+        processed_datasets = self._process_results(all_views)
+
+        # handle empty results
+        if not processed_datasets:
+            return self._raw_data
+
+        # create dataframe from processed results
+        df = pl.from_dicts(processed_datasets)
+        df = df.fill_null(0)
+        self._raw_data = df.clone()  # cache raw data
+
+
+        # return the raw data
+        return self._raw_data
